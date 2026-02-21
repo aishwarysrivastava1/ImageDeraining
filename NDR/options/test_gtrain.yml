@@ -1,0 +1,36 @@
+name: test_gtrain
+model: NDR
+gpu_ids: [0]
+
+#### datasets
+datasets:
+  test_gtrain:
+    name: GTRain_Test
+    mode: GTRain
+
+    gtrain_root: ''
+    
+    scale: 1
+    GT_size: ~
+
+#### path
+path:
+  root: ./
+  pretrain_model_G: ''
+  strict_load: false
+  resume_state: ~
+
+#### network settings
+network_G:
+  which_model_G: NDR
+  in_nc: 3
+  out_nc: 3
+  nf: 64
+  nb: 16
+
+#### training settings (required by code but not used in testing)
+train:
+  lr_G: !!float 1e-9
+  beta1: 0.9
+  beta2: 0.999
+  lr_scheme: MultiStepLR
