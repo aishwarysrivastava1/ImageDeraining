@@ -35,18 +35,7 @@ The core model `RLP_NightRain` (defined in `models/rlp.py`) is designed to be pl
 
 ## 🚄 Usage
 
-### 1. Data Preparation
-Organize your datasets in the following structure:
-```text
-/datasets/
-  └── GTAV-NightRain/
-      ├── train/
-      │   ├── input/
-      │   └── gt/
-      └── test/
-```
-
-### 2. Training
+### 1. Training
 Run `train.py` with your desired configuration.
 
 **Train Uformer with RLP and RPIM:**
@@ -59,13 +48,9 @@ python train.py --arch Uformer_B --use_rlp --use_rpim --dataset GTAV-NightRain -
 python train.py --arch UNet --dataset GTAV-NightRain --train_dir /path/to/data
 ```
 
-### 3. Evaluation
+### 2. Evaluation
 Use the dataset-specific evaluation scripts for accurate metrics (PSNR, SSIM).
 
-**Evaluate on RainDS:**
-```bash
-python evaluate_rainds.py --dataset RainDS --weights /path/to/model.pth
-```
 
 ## 📊 Technical Specifications & Optimizations
 
