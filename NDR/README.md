@@ -38,39 +38,6 @@ NDR/
 └── requirements.txt    # Project dependencies
 ```
 
-## 🛠️ Installation
-
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/NDR-Restore.git
-    cd NDR-Restore
-    ```
-
-2.  **Environment Setup**:
-    It is recommended to use a virtual environment with Python 3.8+:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## 📊 Usage & Multidataset Evaluation
-
-The implementation provides dedicated scripts for each dataset. To run an evaluation, specify the configuration file and model path.
-
-### 1. Test on GTAV-NightRain
-```bash
-python test_gtavnightrain_ndr.py -opt options/test_gtav_set1.yml --model_path "pretrained model/NDR_model.pth"
-```
-
-### 2. Test on RealRain (1K)
-```bash
-python test_realrain_ndr.py -opt options/test_realrain_1k_h.yml --model_path "pretrained model/NDR_model.pth"
-```
-
-### 3. Test on RainDS
-```bash
-python test_rainds_ndr.py -opt options/test_rainds_real.yml --model_path "pretrained model/NDR_model.pth"
-```
-
 ### Parameters:
 *   `-opt`: Path to the YAML configuration file defining data paths and network settings.
 *   `--model_path`: Path to the pre-trained `.pth` file.
@@ -96,5 +63,3 @@ After running a test, results are stored in the `results/` directory:
 
 This implementation is based on the original work of **Miao Yao et al.** on NDR-Restore. Special thanks to the researchers for their contribution to the field of image restoration.
 
----
-*For questions or issues regarding this specific implementation, please open an issue.*
