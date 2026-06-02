@@ -131,7 +131,6 @@ class DatasetTest(Dataset):
     def __getitem__(self, idx):
         path, name = self.samples[idx]
         img = Image.open(path).convert("RGB")
-        # 8-pixel alignment padding for MFDNet testing memory optimization
         W, H = img.size
         pad_w = (8 - W % 8) % 8
         pad_h = (8 - H % 8) % 8
