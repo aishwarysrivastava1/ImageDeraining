@@ -41,9 +41,8 @@ def main():
             for i, data_test in enumerate(tqdm(test_loader, desc=f'Testing {variant}'), 0):
                 torch.cuda.ipc_collect()
                 torch.cuda.empty_cache()
-
                 input_ = data_test[0].cuda()
-                gt_ = data_test[1] # Not needed for testing generation
+                gt_ = data_test[1] 
                 filenames = data_test[2]
 
                 with torch.amp.autocast('cuda'):
