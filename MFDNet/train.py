@@ -89,27 +89,21 @@ def main():
         model_restoration.train()
         
         for i, data in enumerate(tqdm(train_loader), 0):
-            # Fast zero_grad optimization
             model_restoration.zero_grad(set_to_none=True)
-
-            # dataset_gtrain returns rainy, clean, scene
             input_ = data[0].cuda(non_blocking=True)
             target = data[1].cuda(non_blocking=True)
 
             restored = model_restoration(input_)
-            
+
             loss_char0 = criterion_char(restored[0], target)
             loss_char1 = criterion_char(restored[1], input_)
             loss_edge0 = criterion_edge(restored[0], target)
             loss_edge1 = criterion_edge(restored[1], input_)
             loss_SSIM0 = criterion_SSIM(restored[0], target)
             loss_SSIM1 = criterion_SSIM(restored[1], input_)
-            
-            loss = 0.3 * (loss_char0 + 0.2 * loss_char1) + (0.2 * (loss_edge0)) - (0.15 * (loss_SSIM0 + 0.2 * loss_SSIM1))
-            
+            loss = 0.3 * (loss_char0 + 0.2 * loss_char1) + (0.2 * (loss_edge0)) - (0.15 * (loss_SSIM0 + 0.2 * loss_SSIM1))  
             loss.backward()
             optimizer.step()
-
             epoch_loss += loss.item()
             SSIM_all += loss_SSIM0.item()
             train_sample += 1
@@ -124,15 +118,11 @@ def main():
         
         with open(file_loss, 'a+') as loss_file:
             loss_file.write(f'Epoch: {epoch}, Time: {time.time() - epoch_start_time:.4f}, Loss: {epoch_loss:.4f}, SSIM: {SSIM_val:.4f}, LearningRate: {scheduler.get_lr()[0]:.8f}\n')
-
-        # Save checkpoint periodically
         if epoch % args.save_freq == 0:
             torch.save({'epoch': epoch,
                         'state_dict': model_restoration.state_dict() if len(device_ids) == 1 else model_restoration.module.state_dict(),
                         'optimizer': optimizer.state_dict()
                         }, os.path.join(model_dir, f"model_epoch_{epoch}.pth"))
-
-        # Save latest model
         torch.save({'epoch': epoch,
                     'state_dict': model_restoration.state_dict() if len(device_ids) == 1 else model_restoration.module.state_dict(),
                     'optimizer': optimizer.state_dict()
