@@ -15,7 +15,7 @@ Implementation repository for **MFDNet** with a practical training/evaluation pi
 
 ## Overview
 
-This repository contains a cleaned and GitHub-ready implementation of **MFDNet** for single-image deraining, adapted for experimentation on different modern deraining benchmarks.
+This repository contains an implementation of **MFDNet** for single-image deraining, adapted for experimentation on different modern deraining benchmarks.
 
 - Implements core model in `MFDNet.py`
 - Includes training pipeline in `train.py`
@@ -90,7 +90,7 @@ Train on GTRain with custom paths and hyperparameters:
 
 ```bash
 python train.py \
-  --train_dir "D:/Deraining/RLP/rlp/data/GT-RAIN_train" \
+  --train_dir "./data/GT-RAIN_train" \
   --epochs 100 \
   --batch_size 4 \
   --lr 4e-4 \
@@ -107,25 +107,6 @@ Useful flags:
 ---
 
 ## Inference
-
-Run dataset-specific inference scripts:
-
-```bash
-# GTRain
-python test_gtrain.py --input_dir "D:/Deraining/RLP/rlp/data/GT-RAIN_test" --weights "./logs/model_latest.pth" --gpus 0
-
-# GTAV
-python test_gtav.py --input_dir "D:/Deraining/RLP/rlp/data/GTAV-NightRain" --weights "./logs/model_latest.pth" --gpus 0
-
-# OutdoorRain
-python test_outdoor.py --input_dir "D:/Deraining/RLP/rlp/data/Outdoor" --weights "./logs/model_latest.pth" --gpus 0
-
-# RainDS
-python test_rainds.py --input_dir "D:/Deraining/RLP/rlp/data/RainDS" --weights "./logs/model_latest.pth" --gpus 0
-
-# RealRain
-python test_realrain.py --input_dir "D:/Deraining/RLP/rlp/data/RealRain" --weights "./logs/model_latest.pth" --gpus 0
-```
 
 Generated images are saved to `results/MFDNet/<DatasetName>/` (created automatically when scripts run).
 
@@ -147,26 +128,11 @@ Metric CSVs are written to `results/MFDNet/`.
 
 ---
 
-## GitHub-Ready Cleanup Applied
-
-The repository has been cleaned for maintainability and collaboration:
-
-- Removed unused/legacy files not used by current scripts
-- Removed generated result CSV artifacts
-- Added `.gitignore` for datasets, logs, checkpoints, and outputs
-- Preserved only active training/testing/evaluation pipeline files
-
----
-
 ## Citation and Credits
 
 If you use this repository in research or applied work, please cite the original MFDNet paper and acknowledge the upstream implementation:
 
 - Upstream repository: [qwangg/MFDNet](https://github.com/qwangg/MFDNet)
-
----
-
-## Notes
 
 - Some scripts ship with Windows-style default paths; override them with your local directories.
 - For reproducible results, keep dataset organization consistent with script expectations.
