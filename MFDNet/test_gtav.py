@@ -26,8 +26,6 @@ def main():
     model = mfdnet()
     utils.load_checkpoint(model, args.weights)
     model.eval().cuda()
-
-    # Test all sets
     for test_set in ['set1', 'set2', 'set3']:
         set_result_dir = os.path.join(args.result_dir, test_set)
         utils.mkdir(set_result_dir)
