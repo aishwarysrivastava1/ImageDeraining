@@ -30,18 +30,13 @@ def main():
     missing_result = 0
 
     for idx in range(len(dataset)):
-        # GTRain DatasetTest returns rainy_tensor, name
-        # We need the GT image for evaluation
         path, name = dataset.samples[idx]
-        
-        # Ground truth is named with -C- instead of -R-
         scene_dir = os.path.dirname(path)
         base_name = os.path.basename(path)
         
         gt_name = base_name.replace('-R-', '-C-')
         gt_path = os.path.join(scene_dir, gt_name)
         if not os.path.exists(gt_path):
-            # Try single clean file
             gt_name = base_name.split('-R-')[0] + '-C-000.png'
             gt_path = os.path.join(scene_dir, gt_name)
             if not os.path.exists(gt_path):
@@ -57,8 +52,6 @@ def main():
             
         gt_img = cv2.imread(gt_path)
         res_img = cv2.imread(res_path)
-        
-        # Ensure sizes match
         h, w = res_img.shape[:2]
         gt_img = cv2.resize(gt_img, (w, h))
 
