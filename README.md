@@ -1,300 +1,227 @@
-# 🌧️ ImageDeraining — A Unified Research Suite for Image Deraining in Adverse Weather
+# 🌧️ ImageDeraining: A Deep Dive into State-of-the-Art Single Image Deraining Architectures
 
 <div align="center">
 
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.10%2B-EE4C2C.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/aishwarysrivastava1/ImageDeraining/pulls)
-[![Maintenance](https://img.shields.io/badge/Maintained-yes-green.svg)](https://github.com/aishwarysrivastava1/ImageDeraining/graphs/commit-activity)
 [![Stars](https://img.shields.io/github/stars/aishwarysrivastava1/ImageDeraining?style=social)](https://github.com/aishwarysrivastava1/ImageDeraining/stargazers)
 
-**A community-focused, open research platform for benchmarking and advancing image deraining methods across diverse real-world and synthetic adverse weather conditions.**
+**An extensive, independently developed research repository dedicated to the rigorous exploration, enhancement, and evaluation of leading neural architectures for single-image deraining.**
 
-[Overview](#-overview) • [Why This Matters](#-motivation--research-gap) • [Methods](#-implemented-methods) • [Datasets](#-supported-datasets) • [Results](#-benchmark-results) • [Quickstart](#-installation--quickstart) • [Contributing](#-contributing)
+[Introduction](#-introduction--background) • [Motivation](#-personal-motivation--research-scope) • [Architectural Analysis](#-comprehensive-architectural-analysis--implementations) • [Datasets](#-evaluation-methodology--datasets) • [Usage](#-extensive-setup--usage-guide) • [Acknowledgements](#-acknowledgements--bibliography)
 
 </div>
 
 ---
 
-## 🔍 Overview
+## 📖 Introduction & Background
 
-**ImageDeraining** is an open-source research engineering effort that consolidates, extends, and rigorously benchmarks state-of-the-art image deraining architectures under a **single, unified framework**. It is designed to lower the barrier of entry for researchers and practitioners working on adverse weather image restoration — a critical problem with direct downstream impact on autonomous driving, surveillance systems, and outdoor computer vision pipelines.
+Adverse weather conditions, particularly rain, introduce severe complex degradations into optical signals. Rain manifests not just as simple, opaque streaks, but as a combination of multi-scale phenomena: dense background streaks (veiling effect), localized foreground raindrops, and atmospheric scattering. This degradation fundamentally impairs the performance of critical downstream computer vision tasks, ranging from autonomous navigation and advanced driver-assistance systems (ADAS) to intelligent video surveillance and outdoor robotics.
 
-This suite goes beyond simply re-running reference code. Each method has been **independently re-implemented, modularized, and significantly enhanced** with:
+Single Image Deraining (SID) is a highly ill-posed inverse problem. The goal is to recover the latent clean background from a single corrupted observation without any temporal cues. While deep learning has revolutionized this field, the transition from theoretical models in academic papers to robust, generalizable tools remains a significant challenge.
 
-- 🔧 **Engineering improvements** not present in original papers or codebases
-- 📐 **Standardized evaluation protocols** for fair cross-method comparison
-- 🧠 **Hardware-aware optimizations** enabling research on consumer-grade GPUs
-- 📦 **Plug-and-play components** reusable across the broader restoration community
-
-> This repository is actively maintained and welcomes community contributions, dataset additions, and new method integrations.
+This repository represents my comprehensive, personal research effort to understand the intricate mechanics of SOTA deraining networks. It is a documented journey of unravelling complex architectures, pushing their boundaries, and engineering them into a state where they can be evaluated fairly and consistently.
 
 ---
 
-## 💡 Motivation & Research Gap
+## 🎯 Personal Motivation & Research Scope
 
-Image deraining sits at the intersection of **low-level computer vision** and **practical robustness engineering**. Despite significant academic progress, a persistent gap exists between paper implementations and reproducible, comparable baselines:
+When exploring the literature on image deraining, I encountered a landscape fragmented by isolated codebases and disparate evaluation metrics. My primary motivation for building this repository was to create a strictly standardized, highly optimized laboratory for my own experiments. 
 
-- Most codebases evaluate on **a single dataset**, making cross-dataset generalization unclear.
-- Hardware constraints prevent many researchers from reproducing results at scale.
-- Prior injection and backbone modulation techniques are rarely made **modular or extensible**.
-- There is no community-standard suite that evaluates both **CNN-based** and **Transformer-based** methods side-by-side under identical conditions.
+**Key challenges I aimed to address in my research:**
+1. **The Generalization Gap**: Models trained on synthetic data frequently fail on real-world captures. I wanted a framework that seamlessly ran cross-dataset evaluations to measure true generalization.
+2. **Hardware & Memory Bottlenecks**: High-resolution inference with modern Transformers often leads to `CUDA OutOfMemory` errors on consumer hardware. I needed to engineer robust memory management protocols.
+3. **Architectural Rigidity**: Original implementations are often monolithic. I wanted the flexibility to decouple powerful ideas (like prior injection or non-local differentials) from their original backbones and apply them to modern vision transformers.
 
-**This repository directly addresses these gaps**, making it a meaningful contribution to the reproducibility and accessibility of image restoration research.
-
----
-
-## 🧩 Implemented Methods
-
-Each method lives in its own self-contained sub-directory while sharing common dataset interfaces and evaluation conventions.
+**To this end, my scope of work involved:**
+- Re-implementing four distinct SOTA architectures from scratch or heavily modifying their upstream source.
+- Introducing PyTorch Automatic Mixed Precision (AMP) for accelerated training.
+- Integrating complex, hybrid loss functions (Charbonnier, Edge, SSIM, FFT) to drive perceptually superior restoration.
+- Building a unified, automated metric tracking system to eliminate human error in benchmarking.
 
 ---
 
-### 1. 🔵 Rain Location Prior (RLP) — [`./RLP`](./RLP)
+## 🧠 Comprehensive Architectural Analysis & Implementations
 
-> *Extended from: [Rain Location Prior — zkawfanx et al.](https://github.com/zkawfanx/RLP)*
+I selected four distinct architectures that represent different theoretical paradigms in the field of image restoration. I have significantly modified and extended each one.
 
-RLP is a **prior injection framework** that learns where rain appears in an image (a rain location map) using a recurrently updated prior extractor (modified PReNet), then adaptively injects this structural prior into a deep restoration backbone via the **Rain Prior Injection Module (RPIM)** — a spatial modulation mechanism inspired by MPRNet's SAM.
+### 1. Rain Location Prior (RLP) — [`./Rain Location Prior`](./Rain%20Location%20Prior)
+*Based on the research by zkawfanx et al.*
 
-#### 🔨 Contributions Beyond the Original Paper
+**Theoretical Paradigm**: Explicit Prior Injection. 
+Instead of forcing the network to blindly learn the mapping from a rainy to a clean image, RLP first explicitly models *where* the rain is. It uses a recurrent sub-network to generate a spatial rain map. This map acts as a prior, which is adaptively injected into the main restoration backbone via a Rain Prior Injection Module (RPIM), guiding the network's attention to heavily corrupted regions.
 
-| Enhancement Area | Original Paper | This Implementation |
-|:---|:---:|:---:|
-| Backbone support | Single (UNet) | **UNet + Uformer (Transformer)** |
-| Mixed Precision (AMP) | ❌ | ✅ FP16/FP32 with GradScaler |
-| Learning Rate Scheduling | Basic | **Cosine Annealing + Warmup** |
-| Multi-dataset compatibility | ❌ | ✅ 5 datasets, unified loaders |
-| Multi-GPU training | ❌ | ✅ DataParallel support |
-| Loss function | L1 | **Charbonnier Loss (sharper recon.)** |
+**My Enhancements & Engineering:**
+- **Transformer Backbone Leap**: The original work relied on a standard UNet. I engineered the RPIM to be compatible with **Uformer** (a state-of-the-art hierarchical vision transformer), effectively marrying explicit spatial priors with self-attention mechanisms.
+- **Training Acceleration**: I introduced full FP16/FP32 Automatic Mixed Precision via `torch.cuda.amp`.
+- **Advanced Optimization**: Replaced basic step-schedulers with Cosine Annealing and Warmup strategies to stabilize transformer training.
+- **Loss Formulation**: Transitioned from standard L1 loss to Charbonnier Loss for sharper edge reconstruction.
 
-#### Architecture at a Glance
-```
-Input Image
-    │
-    ▼
-[Prior Extractor]  ← Modified PReNet (recurrent rain mask generation)
-    │ Rain Location Map
-    ▼
-[RPIM Block]       ← Spatial modulation (prior × deep features)
-    │ Prior-Enhanced Features
-    ▼
-[Restoration Backbone]  ← UNet / Uformer (switchable)
-    │
-    ▼
-Derained Output
-```
+### 2. Multi-Scale Fusion and Decomposition Network (MFDNet) — [`./MFDNet`](./MFDNet)
+*Based on the research by qwangg et al.*
 
-#### Training Configuration
+**Theoretical Paradigm**: Multi-Scale Feature Decomposition.
+Rain is inherently multi-scale (large foreground drops vs. tiny background streaks). MFDNet tackles this by explicitly decomposing the latent representation into distinct frequency/scale bands. By separating complex rain layers from clean structural background information at various scales, the network achieves highly detailed structural recovery.
 
-| Hyperparameter | Value |
-|:---|:---|
-| Optimizer | AdamW (lr=2e-4, weight decay=0.02) |
-| Scheduler | Cosine Annealing + 3-epoch Warmup |
-| Precision | AMP (FP16/FP32) |
-| Loss | Charbonnier Loss |
-| GPU | Multi-GPU via DataParallel |
+**My Enhancements & Engineering:**
+- **Codebase Modularization**: I heavily refactored the original monolithic code, isolating the core `MFDNet.py` and `restormer_block.py` components to make them plug-and-play for future experiments.
+- **Universal Evaluation Pipeline**: Engineered new data loaders and evaluation scripts (`evaluate_*.py`) to map MFDNet seamlessly to my 5-dataset benchmark suite.
+- **Custom Loss Integration**: Implemented a tri-fold loss function explicitly weighing Charbonnier (pixel-wise), Edge (high-frequency structure), and SSIM (perceptual quality).
 
----
+### 3. Neural Representation for Rain Drop Removal (NeRD) — [`./NeRD`](./NeRD)
+*Based on the research by cschenxiang et al.*
 
-### 2. 🟠 Non-local Differential Restoration (NDR) — [`./NDR`](./NDR)
+**Theoretical Paradigm**: Implicit Neural Representations (INR) + Spatial Transformers.
+NeRD is a paradigm shift. Rather than relying solely on discrete pixel grids, it utilizes INRs to learn a continuous, coordinate-based representation of the image. When combined with multi-scale transformers, NeRD demonstrates an exceptional ability to handle massive, non-uniform degradations like heavy raindrops on a lens.
 
-> *Extended from: [NDR-Restore — Miao Yao et al.](https://github.com/mdyao/NDR-Restore)*
+**My Enhancements & Engineering:**
+- **Hybrid Multi-Loss Function**: Transformers are notoriously data-hungry and difficult to regularize. I engineered a robust hybrid loss integrating Charbonnier, Edge, L1, and notably FFT (Fast Fourier Transform) loss to enforce consistency in the frequency domain.
+- **Stabilized Training Dynamics**: I integrated a customized `pytorch-gradual-warmup-lr` module to implement a gentle warmup phase followed by Cosine Annealing with Restarts, preventing early-stage divergence.
+- **Out-of-the-box Generalization**: Built dedicated inference wrappers tailored for immediate, painless testing across synthetic and real-world datasets.
 
-NDR leverages **non-local feature differentials** to capture long-range rain pattern dependencies. This implementation extends the original with a production-grade inference engine and automated evaluation infrastructure, making it practical for large-scale benchmarking.
+### 4. Non-local Differential Restoration (NDR) — [`./NDR`](./NDR)
+*Based on the research by Miao Yao et al.*
 
-#### 🔨 Contributions Beyond the Original Paper
+**Theoretical Paradigm**: Non-Local Feature Differentials.
+Rain streaks often exhibit strong self-similarity across an image (i.e., they fall in the same direction). NDR leverages non-local operations to capture these long-range dependencies, identifying repetitive rain patterns by computing feature differentials across distant spatial regions.
 
-| Enhancement Area | Original Paper | This Implementation |
-|:---|:---:|:---:|
-| Dataset coverage | 1–2 datasets | **5+ datasets with unified I/O** |
-| GPU memory management | Standard | **"Brutal Cleanup" post-image cycle** |
-| OOM handling | Crash | ✅ Graceful recovery, continues suite |
-| Metric logging | Manual / console | **Auto CSV with timestamps & metadata** |
-| Configuration | Hardcoded | **YAML-driven, fully parameterized** |
-| Rain-type metrics | ❌ | ✅ Rainstreak vs. Raindrop breakdown |
-
-#### Memory-Optimized Inference Engine
-
-One of the significant engineering contributions of this implementation is the **"Brutal Cleanup" inference protocol** — a systematic GPU memory management strategy that enables high-resolution testing on consumer GPUs with limited VRAM:
-
-```python
-# After every single image inference:
-torch.cuda.empty_cache()
-gc.collect()
-torch.cuda.ipc_collect()
-```
-
-This prevents memory fragmentation across long test suites and enables graceful recovery from `CudaOutOfMemory` errors without aborting the entire evaluation — a common pain point in large-scale restoration benchmarking.
+**My Enhancements & Engineering:**
+- **The "Brutal Cleanup" Inference Engine**: Non-local operations are extraordinarily memory-intensive. I developed a systematic memory management protocol—forcing strict `torch.cuda.empty_cache()` and `gc.collect()` cycles after every single image during inference. This prevents VRAM fragmentation and allows massive, high-resolution test suites to run on consumer hardware without crashing.
+- **Automated Metric Analytics**: Engineered a fully automated reporting engine that dumps timestamped CSVs mapping exact PSNR and SSIM values, categorized by specific rain types.
 
 ---
 
-## 📊 Supported Datasets
+## 📊 Evaluation Methodology & Datasets
 
-All methods are evaluated under a **standardized, shared benchmark suite** — a key differentiator of this repository:
+To ensure rigorous validation of my enhancements, I evaluate all models against a standardized suite containing five highly diverse datasets. This includes both synthetic datasets (for controlled quantitative analysis) and real-world datasets (for qualitative generalization testing).
 
-| Dataset | Scene Type | Rain Type | Split | Notes |
-|:---|:---|:---|:---|:---|
-| **GTAV-NightRain** | Synthetic / Night | Dense streaks | Train / Test | Game-engine rendered; realistic lighting |
-| **GTrain** | Synthetic / Day | Mixed | Train | Large-scale general training set |
-| **RainDS** | Hybrid (Real + Syn.) | Streaks + Drops | Train / Test | Rain-type–specific PSNR/SSIM breakdown |
-| **Outdoor-Rain** | Real / Synthetic | Varying density | Test | Outdoor generalization benchmark |
-| **RealRain** | Real-world | Uncontrolled | Test | Ultimate generalization test |
-
-> Cross-dataset evaluation is a first-class citizen of this suite. Models trained on synthetic data are routinely tested on real-world captures to surface generalization gaps — a practice not consistently followed in most prior implementations.
+| Dataset | Scene Type | Rain Profile | My Specific Use Case in this Research |
+|:---|:---|:---|:---|
+| **GTAV-NightRain** | Synthetic (Game Engine) | Dense nighttime streaks | Testing restoration performance under the difficult conditions of artificial night lighting and glare. |
+| **GTrain** | Synthetic / Day | Mixed | Serving as the massive, primary training corpus for all models to ensure a fair starting point. |
+| **RainDS** | Hybrid (Real + Syn.) | Streaks + Drops | Quantifying how well a single network can dynamically handle fundamentally different artifact types simultaneously. |
+| **Outdoor-Rain** | Real / Synthetic | Varying density | Benchmarking generalization capabilities on complex outdoor natural scenes. |
+| **RealRain** | Real-world | Uncontrolled | The ultimate, unconstrained qualitative test to see if theoretical models actually work in the real world. |
 
 ---
 
-## 📈 Benchmark Results
+## 📈 Quantitative Performance Metrics
 
-Standardized PSNR (dB) / SSIM evaluation across datasets. All results reproduced using this codebase.
+All models within this repository are evaluated using standard quantitative image quality metrics:
+- **PSNR (Peak Signal-to-Noise Ratio)**: Measures pixel-wise absolute accuracy.
+- **SSIM (Structural Similarity Index)**: Measures the perceived structural and textural integrity of the reconstructed image.
 
-### GTAV-NightRain
-
-| Method | Backbone | PSNR ↑ | SSIM ↑ | AMP | Multi-GPU |
-|:---|:---|:---:|:---:|:---:|:---:|
-| NDR-Restore (original) | NDR | — | — | ❌ | ❌ |
-| NDR-Restore (this repo) | NDR | — | — | — | — |
-| RLP (original) | UNet | — | — | ❌ | ❌ |
-| RLP + RPIM (this repo) | UNet | — | — | ✅ | ✅ |
-| RLP + RPIM (this repo) | Uformer | — | — | ✅ | ✅ |
-
-> ℹ️ Results will be populated after training runs complete. Contributions with pre-trained weights are welcome — see [Contributing](#-contributing).
+*Detailed numerical benchmarks are actively being compiled into cross-comparative tables across all 5 datasets and will be published in subsequent updates to this repository.*
 
 ---
 
-## 🗂️ Repository Structure
+## 🗂️ Detailed Repository Architecture
 
-```
+To maintain sanity while managing four massive neural network architectures, I have enforced a strict, isolated, yet consistent directory structure:
+
+```text
 ImageDeraining/
 │
-├── RLP/                        # Rain Location Prior
-│   ├── models/                 # RLP, RPIM, UNet, Uformer definitions
-│   ├── dataset_*.py            # Per-dataset data loaders
-│   ├── train.py                # AMP training script
-│   ├── evaluate_*.py           # PSNR/SSIM evaluation
-│   ├── test_*.py               # Inference & result generation
-│   ├── options.py              # Hyperparameter management
-│   └── README.md               # Method-level documentation
+├── MFDNet/                     # Multi-Scale Fusion and Decomposition Network
+│   ├── MFDNet.py               # Core architecture
+│   ├── restormer_block.py      # Fundamental building blocks
+│   └── (Dataset loaders, training scripts, evaluation scripts...)
+│
+├── NeRD/                       # Neural Representation for Rain Drop Removal
+│   ├── model.py                # Multi-scale transformer core
+│   ├── mlp.py                  # Implicit Neural Representation modules
+│   └── (Inference wrappers, warmup schedulers, loss definitions...)
+│
+├── Rain Location Prior/        # Rain Location Prior (RLP)
+│   ├── models/                 # Uformer, UNet, RPIM definitions
+│   ├── options.py              # Centralized hyperparameter routing
+│   └── (AMP training logic, DataParallel handlers...)
 │
 ├── NDR/                        # Non-local Differential Restoration
-│   ├── data/                   # Dataset-specific loaders
-│   ├── models/                 # NDR architecture
-│   ├── options/                # YAML configuration files
-│   ├── pretrained model/       # Pre-trained .pth weights
-│   ├── results/                # Output images + CSV reports
-│   ├── utils/                  # Logging & image processing
-│   ├── test_*.py               # Dataset-specific test entry points
-│   ├── requirements.txt
-│   └── README.md               # Method-level documentation
+│   ├── models/                 # Non-local differential blocks
+│   ├── options/                # YAML-driven configuration system
+│   └── (Brutal cleanup inference scripts, CSV metric loggers...)
 │
 └── README.md                   # You are here
 ```
 
+Every sub-directory operates as an independent workspace, complete with its own specific `README.md`, localized data handling logic, and most contain their own Python dependencies (`requirements.txt` or `.yml`).
+
 ---
 
-## ⚙️ Installation & Quickstart
+## ⚙️ Extensive Setup & Usage Guide
 
-### Prerequisites
-- Python 3.8+
-- PyTorch 1.10+ with CUDA (CPU inference supported, not recommended for training)
+### 1. System Requirements
+- **OS**: Linux or Windows 10/11
+- **Python**: Version 3.8 or higher
+- **Framework**: PyTorch 1.10+ (CUDA is **strongly** recommended. While CPU inference is technically possible, it is computationally prohibitive for these models).
 
-### Clone & Install
-
+### 2. Initialization
+First, clone the master repository to your local machine:
 ```bash
 git clone https://github.com/aishwarysrivastava1/ImageDeraining.git
 cd ImageDeraining
-
-# Install dependencies for RLP
-cd RLP && pip install -r requirements.txt    # timm, warmup_scheduler, tqdm
-cd ..
-
-# Install dependencies for NDR
-cd NDR && pip install -r requirements.txt
 ```
 
-### Training (RLP)
+### 3. Environment & Execution per Architecture
+Because each architecture requires specific library versions (e.g., Einops for NeRD, Timm for RLP's Uformer), you must navigate into the desired directory and configure its specific environment.
 
+**Example: Training and Evaluating RLP with Uformer**
 ```bash
-# Uformer + RLP + RPIM on GTAV-NightRain (recommended)
-python RLP/train.py \
+# Enter the workspace
+cd "Rain Location Prior"
+
+# Install isolated dependencies (e.g. timm, warmup_scheduler, tqdm)
+pip install -r requirements.txt
+
+# Launch AMP-enabled training on GTAV-NightRain
+python train.py \
   --arch Uformer_B \
   --use_rlp --use_rpim \
   --dataset GTAV-NightRain \
-  --train_dir /path/to/data \
+  --train_dir /path/to/your/local/data \
   --batch_size 4 \
   --nepoch 250 \
   --warmup
-
-# Baseline: vanilla UNet without prior injection
-python RLP/train.py \
-  --arch UNet \
-  --dataset GTAV-NightRain \
-  --train_dir /path/to/data
 ```
 
-### Evaluation (NDR)
-
+**Example: Running Inference on NeRD**
 ```bash
-# Run full test suite with automated CSV metric export
-python NDR/test_<dataset>.py \
-  -opt NDR/options/<config>.yml \
-  --model_path "NDR/pretrained model/<weights>.pth" \
-  --csv_dir NDR/results/
+cd ../NeRD
+pip install -r requirements.txt
+
+# Run inference and generate restored images
+python test_gtav.py \
+    --input_dir /path/to/GTAV-NightRain \
+    --result_dir ./results/NeRD/GTAV \
+    --weights ./logs/model_latest.pth
+
+# Calculate PSNR/SSIM against Ground Truth
+python evaluate_gtav.py \
+    --result_dir ./results/NeRD/GTAV \
+    --gt_dir /path/to/GTAV-NightRain \
+    --csv_dir ./results/NeRD
 ```
 
-Outputs are saved to `NDR/results/` — including restored images and a timestamped CSV with per-image PSNR/SSIM and dataset-level averages.
+*For highly detailed, script-specific flags and YAML configurations, please consult the inner `README.md` file located inside each architecture's folder.*
 
 ---
 
-## 🤝 Contributing
+## 📚 Acknowledgements & Bibliography
 
-Contributions are warmly welcomed. This project is designed to grow with the community.
+This comprehensive repository is the result of my personal passion for computational photography and image restoration. However, it is fundamentally built upon the brilliant foundational research of others. I extend my utmost respect and deepest gratitude to the original authors of these architectures. 
 
-**Ways to contribute:**
+If my implementations, refactors, or optimizations aid in your understanding or research, I ask that you direct all formal academic citations to the following pioneering works:
 
-- 📥 **Add a new deraining method** — follow the existing sub-directory structure and README convention
-- 📊 **Submit benchmark results** — run evaluations on your hardware and open a PR to populate the results table
-- 🧪 **Add dataset support** — new loaders for emerging deraining benchmarks
-- 🐛 **Bug reports & fixes** — open an issue or a pull request
-- 📝 **Documentation improvements** — clearer explanations, usage examples, tutorials
-
-Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting a PR. All contributions are credited.
-
----
-
-## 📚 Citation & References
-
-If you use this repository in your research, please consider citing the original papers and starring this repository:
-
-```bibtex
-@misc{imagederaining2024,
-  author       = {Aishwary Srivastava},
-  title        = {ImageDeraining: A Unified Research Suite for Image Deraining},
-  year         = {2024},
-  publisher    = {GitHub},
-  howpublished = {\url{https://github.com/aishwarysrivastava1/ImageDeraining}}
-}
-```
-
-**Upstream works this repository builds upon:**
-
-- **RLP**: [Rain Location Prior for Image Deraining](https://github.com/zkawfanx/RLP) — zkawfanx et al.
-- **NDR**: [Non-local Differential Restoration for Image Deraining](https://github.com/mdyao/NDR-Restore) — Miao Yao et al.
-- **Uformer**: Wang et al. — Transformer backbone integrated into RLP
-- **MPRNet**: Spatial Attention Module adapted for RPIM design
-
----
-
-## 📬 Contact
-
-Maintained by **Aishwary Srivastava** — [@aishwarysrivastava1](https://github.com/aishwarysrivastava1)
-
-Open an [issue](https://github.com/aishwarysrivastava1/ImageDeraining/issues) for bugs, questions, or method integration requests. Pull requests are reviewed promptly.
+- **MFDNet**: *Multi-Scale Fusion and Decomposition Network for Single Image Deraining.* Upstream codebase: [qwangg/MFDNet](https://github.com/qwangg/MFDNet)
+- **NeRD**: *Neural Representation for Rain Drop Removal.* Upstream codebase: [cschenxiang/NeRD-Rain](https://github.com/cschenxiang/NeRD-Rain)
+- **RLP**: *Rain Location Prior for Image Deraining.* Upstream codebase: [zkawfanx/RLP](https://github.com/zkawfanx/RLP)
+- **NDR**: *Non-local Differential Restoration for Image Deraining.* Upstream codebase: [mdyao/NDR-Restore](https://github.com/mdyao/NDR-Restore)
 
 ---
 
 <div align="center">
-<sub>Built with care for the Computer Vision research community · Contributions welcome · MIT Licensed</sub>
+<b>Implementation by Aishwary Srivastava</b> <br><br>
+<sub>Authored for rigorous personal research in Deep Learning and Low-Level Computer Vision · MIT Licensed</sub>
 </div>
-
